@@ -7,23 +7,27 @@ const Body = Matter.Body;
 const Composites = Matter.Composites;
 const Composite = Matter.Composite;
 
-var engine;
-var world;
-
+let engine;
+let world;
 var ground, bridge;
 var leftWall, rightWall;
 var jointPoint;
 var jointLink;
-var zombie, breakButton;
+var zombie;
+var zombie1, zombie2, zombie3, zombie4;
+var breakButton;
+var backgroundImage;
 
 var stones = [];
 
-var bg_img, zombieAnim1, zombieAnim2;
-
 function preload() {
-  bg_img = loadImage("./assets/background.png");
-  zombieAnim1 = loadAnimation("./assets/zombie1.png", "./assets/zombie2.png", "./assets/zombie1.png");
-  zombieAnim2 = loadAnimation("./assets/zombie3.png", "./assets/zombie4.png", "./assets/zombie3.png");
+  zombie1 = loadImage("./assets/zombie1.png");
+  zombie2 = loadImage("./assets/zombie2.png");
+
+  zombie3 = loadImage("./assets/zombie3.png");
+  zombie4 = loadImage("./assets/zombie4.png");
+
+  backgroundImage = loadImage("./assets/background.png");
 }
 
 function setup() {
@@ -32,72 +36,62 @@ function setup() {
   world = engine.world;
   frameRate(80);
 
-  ground = new Base(0, height - 10, width * 2, 20, "#795548", true);
-  leftWall = new Base(width * 0.1, height * 0.5, 500, 100, "#8d6e63", true);
-  rightWall = new Base(width * 0.9, height * 0.5, 500, 100, "#8d6e63", true);
+  ground = new Base(0, height - 10, width * 2, 20);
+  leftWall = new Base(100, height - 300, 200, height / 2 + 100);
+  rightWall = new Base(width - 100, height - 300, 200, height / 2 + 100);
 
-  bridge = new Bridge(15, {x: width * 0.2 + 60, y: height * 0.5});
-  jointPoint = new Base(width * 0.8 - 110, height * 0.5, 10, 100, "#8d6e63", true);
+  bridge = new Bridge(30, { x: 50, y: height / 2 - 140 });
+  jointPoint = new Base(width - 250, height / 2 - 100, 40, 20);
 
   Matter.Composite.add(bridge.body, jointPoint);
-
   jointLink = new Link(bridge, jointPoint);
 
-  for (var i = 0; i <= 7; i++) {
-    var x = random(width * 0.4, width * 0.6);
-    var y = random(-10, 140);
+  for (var i = 0; i <= 8; i++) {
+    var x = random(width / 2 - 200, width / 2 + 300);
+    var y = random(-100, 100);
     var stone = new Stone(x, y, 80, 80);
     stones.push(stone);
   }
 
-  var zombie = createSprite(175, height - 110);
-  zombie.x = 175;
-  console.log(zombie.x)
-  zombie.addAnimation("leftToRight", zombieAnim1);
-  zombie.addAnimation("rightToLeft", zombieAnim2);
-  zombie.changeAnimation("leftToRight");
-  zombie.velocityX = 3;
-  zombie.scale = 0.08;
+  zombie = createSprite(width / 2, height - 110);
+  zombie.addAnimation("lefttoright", zombie1, zombie2, zombie1);
+  zombie.addAnimation("righttoleft", zombie3, zombie4, zombie3);
+  zombie.scale = 0.1;
+  zombie.velocityX = 10;
 
   breakButton = createButton("");
   breakButton.position(width - 200, height / 2 - 50);
-  breakButton.class("break_button");
-
-  breakButton.mouseClicked(onBreakButtonPressed)
+  breakButton.class("breakbutton");
+  breakButton.mouseClicked(handleButtonPress);
 }
 
 function draw() {
-  background(51);
-
+  background(backgroundImage);
   Engine.update(engine);
 
-  image(bg_img, 0, 0, width, height);
-
-  ground.show();
-  leftWall.show();
-  rightWall.show();
   bridge.show();
-
-  if (zombie.position.x > width - 175) {
-    zombie.changeAnimation("rightToLeft")
-    zombie.velocityX = -3;
-  }
-  if (zombie.position.x < 175) {
-    zombie.changeAnimation("leftToRight");
-    zombie.velocityX = 3;
-  }
 
   for (var stone of stones) {
     stone.show();
   }
-  
+
+  if (zombie.position.x >= width - 300) {
+    zombie.velocityX = -10;
+    zombie.changeAnimation("righttoleft");
+  }
+
+  if (zombie.position.x <= 300) {
+    zombie.velocityX = 10;
+    zombie.changeAnimation("lefttoright");
+  }
+
   drawSprites();
 }
 
-function onBreakButtonPressed() {
+function handleButtonPress() {
   jointLink.detach();
 
   setTimeout(() => {
     bridge.break();
-  }, 1500)
+  }, 1500);
 }
